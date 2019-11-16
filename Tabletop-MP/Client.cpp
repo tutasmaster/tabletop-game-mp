@@ -87,13 +87,24 @@ Client::Client() : socket(this){
 
 void Client::TableUpdate(sf::Event &e) {
 	if (e.type == sf::Event::MouseButtonPressed) {
-		auto et = GetEntityAt(0, sf::Vector2f(e.mouseButton.x, e.mouseButton.y));
+		auto et = GetEntityAt(0, sf::Vector2f(e.mouseButton.x, e.mouseButton.y - 20));
 		if (et == nullptr) {
 			std::cout << "Nothing was found under the cursor\n";
 		}
 		else {
 			std::cout << "Found asset " << et->asset_id << " under the cursor.\n";
 		}
+	}
+	else if (e.type == sf::Event::KeyPressed) {
+		auto et = GetEntityAt(0, sf::Vector2f(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y - 20));
+		if (et == nullptr)
+			return;
+		if (e.key.code == sf::Keyboard::Q)
+			et->rotation -= 10;
+		else if (e.key.code == sf::Keyboard::E)
+			et->rotation += 10;
+		else if (e.key.code == sf::Keyboard::F)
+			et->Flip();
 	}
 }
 

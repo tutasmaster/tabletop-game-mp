@@ -11,6 +11,7 @@ Tabletop::Tabletop()
 	card.front_id = 1;
 	card.x = 100;
 	card.y = 100;
+	card.rotation = 0;
 	area_list[0].entity_list.push_back(std::make_unique<Tabletop::Entity>(board));
 	area_list[0].entity_list.push_back(std::make_unique<Tabletop::Card>(card));
 }

@@ -16,6 +16,7 @@ public:
 		Player* owner = nullptr;
 		unsigned int id = 0;
 		float x = 0, y = 0;
+		float rotation = 0;
 		bool is_movable = true;
 		unsigned int asset_id = 0;
 		virtual void Flip() {}
@@ -76,12 +77,31 @@ public:
 			texture.loadFromFile(path);
 			drawable.setTexture(texture);
 			drawable.setColor(color);
+			drawable.setOrigin(sf::Vector2f(texture.getSize().x / 2, texture.getSize().y / 2));
 		}
 		void Draw(sf::RenderTarget& render_target, Tabletop::Entity& e) override {
 			drawable.setPosition(sf::Vector2f(e.x, e.y));
+			drawable.setRotation(e.rotation);
 			render_target.draw(drawable);
 		}
-		bool CheckCollisionAtPoint(sf::Vector2f pos, Tabletop::Entity& e) override { return (pos.x > e.x&& pos.x < e.x + texture.getSize().x && pos.y > e.y&& pos.y < e.y + texture.getSize().y); }
+		bool CheckCollisionAtPoint(sf::Vector2f pos, Tabletop::Entity& e) override { 
+			float angle = -((e.rotation / 180.0f) * 3.14159265358979323846);
+			float sinus = sin(angle);
+			float cosin = cos(angle);
+
+			sf::Vector2f point = pos - sf::Vector2f(e.x, e.y);
+			
+			sf::Vector2f temp(
+				(point.x * cosin) - (point.y * sinus), 
+				(point.x * sinus) + (point.y * cosin)
+			);
+
+			std::cout << temp.x << " : " << temp.y << "\n";
+
+			point = temp + sf::Vector2f(e.x, e.y);
+
+			return (point.x > e.x - (texture.getSize().x / 2) && point.x < e.x + (texture.getSize().x/2) && point.y > e.y - (texture.getSize().y / 2) && point.y < e.y + (texture.getSize().y / 2));
+		}
 	};
 
 	AssetManager() { 
