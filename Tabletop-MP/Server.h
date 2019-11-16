@@ -26,6 +26,8 @@ public:
 
 		bool connected = false;
 	}socket;
+
+	AssetManager asset_manager;
 	Tabletop table;
 	void Run();
 

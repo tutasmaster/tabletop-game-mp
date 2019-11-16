@@ -53,10 +53,35 @@ Client::Client() : socket(this){
 
 }
 
+void Client::Update() {
+	sf::Event window_event;
+	while (window.pollEvent(window_event)) {
+		if (window_event.type == sf::Event::Closed)
+			window.close();
+	}
+}
+
+void Client::Draw() {
+	window.clear();
+	sf::RectangleShape background;
+	background.setFillColor(sf::Color(25, 25, 25, 255));
+	background.setSize(sf::Vector2f(table.area_list[0].width, table.area_list[0].height));
+	window.draw(background);
+	for (auto& e : table.area_list[0].entity_list) {
+		asset_manager.asset_list[e.asset_id]->Draw(window, e);
+	}
+	window.display();
+}
+
 void Client::Run() {
+	window.create(sf::VideoMode(1280, 720), "Tabletop", 5U);
+
 	socket.Connect();
-	while (socket.connected) {
-		socket.Update();
+	while(window.isOpen()){
+		if (socket.connected) 
+			socket.Update();
+		Update();
+		Draw();
 	}
 }
 

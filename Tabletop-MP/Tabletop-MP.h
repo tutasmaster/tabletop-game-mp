@@ -5,25 +5,6 @@
 #include <vector>
 #include "SFML/Graphics.hpp"
 
-class AssetManager {
-public:
-	struct Asset {
-		int id = 0;
-		virtual void Draw(sf::RenderTarget* render_target) = 0;
-	};
-
-	class Rectangle : public Asset {
-		sf::RectangleShape drawable;
-		Rectangle(sf::Vector2f size = sf::Vector2f(100,100), const sf::Color &color = sf::Color::Red) : drawable(size) {
-			drawable.setFillColor(color);
-			drawable.setSize(size);
-		}
-		void Draw(sf::RenderTarget* render_target) override { render_target->draw(drawable); }
-	};
-
-	std::vector<Asset> asset_list;
-};
-
 class Tabletop {
 public:
 	class Player {
@@ -58,4 +39,34 @@ public:
 	Tabletop();
 
 	std::vector<PlayArea> area_list;
+};
+
+class AssetManager {
+public:
+	struct Asset {
+	public:
+		int id = 0;
+		virtual void Draw(sf::RenderTarget& render_target, Tabletop::Entity& e) = 0;
+	};
+
+	class Rectangle : public Asset {
+	public:
+		sf::RectangleShape drawable;
+		Rectangle(sf::Vector2f size = sf::Vector2f(100, 100), const sf::Color& color = sf::Color::Red) : drawable(size) {
+			drawable.setFillColor(color);
+			drawable.setSize(size);
+		}
+		void Draw(sf::RenderTarget& render_target, Tabletop::Entity& e) override { 
+			drawable.setPosition(sf::Vector2f(e.x, e.y)); 
+			render_target.draw(drawable); 
+		}
+	};
+	AssetManager() { AddAsset(Rectangle()); }
+	template<typename T>
+	void AddAsset(T& asset) { 
+		asset.id = current_asset++; 
+		asset_list.push_back(std::make_unique<T>(asset)); 
+	}
+	unsigned int current_asset = 0;
+	std::vector<std::unique_ptr<Asset>> asset_list;
 };

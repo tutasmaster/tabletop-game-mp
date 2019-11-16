@@ -24,11 +24,14 @@ public:
 
 		bool connected = false;
 	}socket;
-
+	
 	AssetManager asset_manager;
 	Tabletop table;
 	sf::RenderWindow window;
 	void Run();
+
+	void Update();
+	void Draw();
 
 	Client();
 };
