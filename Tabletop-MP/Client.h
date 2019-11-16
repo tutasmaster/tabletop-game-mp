@@ -34,6 +34,7 @@ public:
 	sf::RenderWindow window;
 	void Run();
 
+
 	void Update();
 	void Draw();
 

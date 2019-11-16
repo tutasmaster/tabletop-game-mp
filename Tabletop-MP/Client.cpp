@@ -68,6 +68,13 @@ void Client::Socket::UpdateEntity(Serial::Packet& packet) {
 	packet >> table_id >> entity_id >> fun;
 	Tabletop::Entity &e = *owner->table.area_list[table_id].entity_list[entity_id];
 	switch ((MESSAGE_ENTITY)fun) {
+	case MESSAGE_ENTITY::ASSET_ID:
+	{
+		unsigned char asset_id = 0;
+		packet >> asset_id;
+		e.asset_id = asset_id;
+	}
+		break;
 	case MESSAGE_ENTITY::FLIP:
 		e.Flip();
 		break;
@@ -81,8 +88,17 @@ Client::Client() : socket(this){
 void Client::Update() {
 	sf::Event window_event;
 	while (window.pollEvent(window_event)) {
-		if (window_event.type == sf::Event::Closed)
+		if (window_event.type == sf::Event::Closed){
 			window.close();
+		}
+		else if (window_event.type == sf::Event::MouseButtonPressed) {
+			table.area_list[0].entity_list[0]->Flip();
+			Serial::Packet p;
+			p << (unsigned char)MESSAGE_TYPE::UPDATE_ENTITY << (unsigned char)0 << (unsigned char)0 << (unsigned char)MESSAGE_ENTITY::FLIP;
+			ENetPacket* packet = p.GetENetPacket();
+			enet_peer_send(socket.server, 0, packet);
+			enet_host_flush(socket.client);
+		}
 	}
 }
 
