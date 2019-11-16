@@ -12,11 +12,13 @@ public:
 	public:
 		Socket(Client * client) : owner(client) {}
 
-		void Connect();
+		void Connect(std::string ip = "127.0.0.1", unsigned short port = 7777);
 
 		ENetHost* client = nullptr;
 		ENetPeer* server = nullptr;
 		Client* owner = nullptr;
+
+		ENetAddress address = { 0 };
 
 		bool connected = false;
 	}socket;
