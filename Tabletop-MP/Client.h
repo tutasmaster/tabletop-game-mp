@@ -13,6 +13,7 @@ public:
 		Socket(Client * client) : owner(client) {}
 
 		void Connect(std::string ip = "127.0.0.1", unsigned short port = 7777);
+		void Update();
 
 		ENetHost* client = nullptr;
 		ENetPeer* server = nullptr;

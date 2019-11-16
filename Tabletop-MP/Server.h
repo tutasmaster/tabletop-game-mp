@@ -15,13 +15,14 @@ public:
 		Socket(Server* server) : owner(server) {}
 
 		void Start();
+		void Update();
 
 		std::vector<User> connected_clients;
 
 		ENetHost* server = nullptr;
 		Server* owner = nullptr;
 
-		bool running = false;
+		bool connected = false;
 	}socket;
 	Tabletop table;
 	void Run();

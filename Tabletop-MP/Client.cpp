@@ -23,6 +23,30 @@ void Client::Socket::Connect(std::string ip = "127.0.0.1", unsigned short port =
 	enet_host_flush(client);
 }
 
+void Client::Socket::Update() {
+	ENetEvent network_event;
+	while (enet_host_service(client, &network_event, 0) > 0)
+	{
+		switch (network_event.type)
+		{
+		case ENET_EVENT_TYPE_CONNECT:
+			break;
+		case ENET_EVENT_TYPE_RECEIVE:
+		{
+			enet_packet_destroy(network_event.packet);
+		}
+		break;
+		case ENET_EVENT_TYPE_DISCONNECT:
+			break;
+		case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
+			break;
+		default:
+			break;
+		}
+	}
+
+}
+
 Client::Client() : socket(this){
 
 }
