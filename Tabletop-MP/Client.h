@@ -40,6 +40,8 @@ public:
 		float zoom = 1;
 	}current_view;
 
+	sf::Vector2f mouse_table_position;
+
 	Tabletop::Entity* GetEntityAt(unsigned char areaID, sf::Vector2f pos);
 
 	void Run();

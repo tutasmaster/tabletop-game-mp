@@ -96,7 +96,7 @@ void Client::TableUpdate(sf::Event &e) {
 		}
 	}
 	else if (e.type == sf::Event::KeyPressed) {
-		auto et = GetEntityAt(0, sf::Vector2f(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y - 20));
+		auto et = GetEntityAt(0, sf::Vector2f(mouse_table_position.x, mouse_table_position.y));
 		if (et == nullptr)
 			return;
 		if (e.key.code == sf::Keyboard::Q)
@@ -109,14 +109,55 @@ void Client::TableUpdate(sf::Event &e) {
 }
 
 void Client::Update() {
+	window.setView(current_view.view);
+	mouse_table_position = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+	window.setView(sf::View(sf::FloatRect(0,0,1280, 720)));
+
 	sf::Event window_event;
 	while (window.pollEvent(window_event)) {
 		if (window_event.type == sf::Event::Closed) {
 			window.close();
 		}
 		else {
-			if (sf::Mouse::getPosition().y > 20) {
+			if (sf::Mouse::getPosition(window).y > 20) {
 				TableUpdate(window_event);
+			}
+			else {
+				if (window_event.type == sf::Event::KeyPressed) {
+					if (window_event.key.code == sf::Keyboard::Q) {
+						current_view.view.rotate(-5);
+						current_view.rotation -= 5;
+					}
+					else if (window_event.key.code == sf::Keyboard::E) {
+						current_view.view.rotate(5);
+						current_view.rotation += 5;
+					}
+					else if (window_event.key.code == sf::Keyboard::W) {
+						float x = cos(((current_view.rotation + 90) / 180) * 3.14159265358979323846);
+						float y = sin(((current_view.rotation + 90) / 180) * 3.14159265358979323846);
+						current_view.view.move(sf::Vector2f(x * -10, y * -10));
+					}	
+					else if (window_event.key.code == sf::Keyboard::A) {
+						float x = cos((current_view.rotation / 180) * 3.14159265358979323846);
+						float y = sin((current_view.rotation / 180) * 3.14159265358979323846);
+						current_view.view.move(sf::Vector2f(x * -10, y * -10));
+					}
+					else if (window_event.key.code == sf::Keyboard::S) {
+						float x = cos(((current_view.rotation+90) / 180) * 3.14159265358979323846);
+						float y = sin(((current_view.rotation+90) / 180) * 3.14159265358979323846);
+						current_view.view.move(sf::Vector2f(x * 10, y*10));
+					}
+					else if (window_event.key.code == sf::Keyboard::D) {
+						float x = cos((current_view.rotation / 180) * 3.14159265358979323846);
+						float y = sin((current_view.rotation / 180) * 3.14159265358979323846);
+						current_view.view.move(sf::Vector2f(x * 10, y * 10));
+					}
+						
+				}
+				else if (window_event.type == sf::Event::MouseWheelScrolled) {
+					current_view.view.rotate(-window_event.mouseWheelScroll.delta * 3.6);
+					current_view.rotation += -window_event.mouseWheelScroll.delta * 3.6;
+				}
 			}
 		}
 	}
