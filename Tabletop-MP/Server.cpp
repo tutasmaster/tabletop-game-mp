@@ -71,6 +71,15 @@ void Server::Socket::UpdateEntity(Serial::Packet& packet) {
 		e.Flip();
 		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::ASSET_ID);
 		break;
+	case MESSAGE_ENTITY::ROTATE:
+		std::cout << "AN ENTITY HAS BEEN ROTATED!\n";
+	{
+		float rotation = 0;
+		packet >> rotation;
+		e.rotation = rotation;
+		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::ROTATE);
+	}
+		break;
 	}
 }
 
@@ -81,6 +90,9 @@ void Server::Socket::BroadcastEntityStateUpdate(unsigned char table_id, unsigned
 	switch ((MESSAGE_ENTITY)entity_function) {
 	case MESSAGE_ENTITY::ASSET_ID:
 		p << owner->table.area_list[table_id].entity_list[entity_id]->asset_id;
+		break;
+	case MESSAGE_ENTITY::ROTATE:
+		p << owner->table.area_list[table_id].entity_list[entity_id]->rotation;
 		break;
 	}
 	ENetPacket* packet = p.GetENetPacket();

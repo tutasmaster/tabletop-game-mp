@@ -8,6 +8,7 @@ Tabletop::Tabletop()
 	board.asset_id = 2;
 	board.is_movable = false;
 	Tabletop::Card card;
+	card.id = 1;
 	card.front_id = 1;
 	card.x = 100;
 	card.y = 100;

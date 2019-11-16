@@ -14,7 +14,7 @@ public:
 	class Entity {
 	public:
 		Player* owner = nullptr;
-		unsigned int id = 0;
+		unsigned char id = 0;
 		float x = 0, y = 0;
 		float rotation = 0;
 		bool is_movable = true;

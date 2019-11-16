@@ -78,10 +78,17 @@ void Client::Socket::UpdateEntity(Serial::Packet& packet) {
 	case MESSAGE_ENTITY::FLIP:
 		e.Flip();
 		break;
+	case MESSAGE_ENTITY::ROTATE:
+	{
+		float rotation = 0;
+		packet >> rotation;
+		e.rotation = rotation;
+	}
+		break;
 	}
 }
 
-Client::Client() : socket(this){
+Client::Client() : socket(this), eman(this){
 
 }
 
@@ -100,11 +107,11 @@ void Client::TableUpdate(sf::Event &e) {
 		if (et == nullptr)
 			return;
 		if (e.key.code == sf::Keyboard::Q)
-			et->rotation -= 10;
+			eman.Rotate(*et, -10);
 		else if (e.key.code == sf::Keyboard::E)
-			et->rotation += 10;
+			eman.Rotate(*et, 10);
 		else if (e.key.code == sf::Keyboard::F)
-			et->Flip();
+			eman.Flip(*et);
 	}
 }
 
@@ -217,4 +224,24 @@ Tabletop::Entity* Client::GetEntityAt(unsigned char areaID, sf::Vector2f pos)
 			return &e;
 	}
 	return nullptr;
+}
+
+void Client::EntityManipulator::Flip(Tabletop::Entity& e)
+{
+	e.Flip();
+	Serial::Packet packet;
+	packet << (unsigned char) MESSAGE_TYPE::UPDATE_ENTITY << (unsigned char)0 << e.id << (unsigned char)MESSAGE_ENTITY::FLIP;
+	ENetPacket* p = packet.GetENetPacket();
+	enet_peer_send(client->socket.server, 0, p);
+	enet_host_flush(client->socket.client);
+}
+
+void Client::EntityManipulator::Rotate(Tabletop::Entity& e, float rotation)
+{
+	e.rotation += rotation;
+	Serial::Packet packet;
+	packet << (unsigned char)MESSAGE_TYPE::UPDATE_ENTITY << (unsigned char)0 << e.id << (unsigned char)MESSAGE_ENTITY::ROTATE << e.rotation;
+	ENetPacket* p = packet.GetENetPacket();
+	enet_peer_send(client->socket.server, 0, p);
+	enet_host_flush(client->socket.client);
 }

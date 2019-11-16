@@ -40,6 +40,13 @@ public:
 		float zoom = 1;
 	}current_view;
 
+	struct EntityManipulator {
+		EntityManipulator(Client * c) : client(c) {}
+		void Flip(Tabletop::Entity& e);
+		void Rotate(Tabletop::Entity& e, float rotation);
+		Client* client;
+	}eman;
+
 	sf::Vector2f mouse_table_position;
 
 	Tabletop::Entity* GetEntityAt(unsigned char areaID, sf::Vector2f pos);
