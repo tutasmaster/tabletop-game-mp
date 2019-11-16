@@ -58,6 +58,8 @@ void Client::Update() {
 	while (window.pollEvent(window_event)) {
 		if (window_event.type == sf::Event::Closed)
 			window.close();
+		if (window_event.type == sf::Event::MouseButtonPressed)
+			table.area_list[0].entity_list[0]->Flip();
 	}
 }
 
@@ -68,13 +70,15 @@ void Client::Draw() {
 	background.setSize(sf::Vector2f(table.area_list[0].width, table.area_list[0].height));
 	window.draw(background);
 	for (auto& e : table.area_list[0].entity_list) {
-		asset_manager.asset_list[e.asset_id]->Draw(window, e);
+		asset_manager.asset_list[e->asset_id]->Draw(window, *e);
 	}
 	window.display();
 }
 
 void Client::Run() {
 	window.create(sf::VideoMode(1280, 720), "Tabletop", 5U);
+	asset_manager.AddSprite("Assets/back.png");
+	asset_manager.AddSprite("Assets/2_of_clubs_th.jpg");
 
 	socket.Connect();
 	while(window.isOpen()){

@@ -13,10 +13,12 @@ public:
 
 	class Entity {
 	public:
-		Player* owner;
+		Player* owner = nullptr;
 		unsigned int id = 0;
 		float x = 0, y = 0;
+		bool is_movable = true;
 		unsigned int asset_id = 0;
+		virtual void Flip() {}
 	};
 
 	class Card : public Tabletop::Entity{
@@ -24,7 +26,10 @@ public:
 		bool is_flipped = false;
 		unsigned int front_id = 0;
 		unsigned int back_id = 0;
-		void Flip() { asset_id = is_flipped ? front_id : back_id; asset_id = !asset_id; }
+		void Flip() override { 
+			is_flipped = !is_flipped;
+			asset_id = is_flipped ? front_id : back_id; 
+		}
 	};
 
 	class PlayArea {
@@ -33,7 +38,7 @@ public:
 		unsigned char id = 0;
 		std::string name = "EMPTY";
 		float width = 0, height = 0;
-		std::vector<Tabletop::Entity> entity_list;
+		std::vector< std::unique_ptr<Tabletop::Entity>> entity_list;
 	};
 
 	Tabletop();
@@ -45,7 +50,6 @@ class AssetManager {
 public:
 	struct Asset {
 	public:
-		int id = 0;
 		virtual void Draw(sf::RenderTarget& render_target, Tabletop::Entity& e) = 0;
 	};
 
@@ -61,11 +65,32 @@ public:
 			render_target.draw(drawable); 
 		}
 	};
-	AssetManager() { AddAsset(Rectangle()); }
+
+	class Sprite : public Asset {
+	public:
+		sf::Texture texture;
+		sf::Sprite drawable;
+		Sprite(const std::string path = "Assets/Empty.png", const sf::Color& color = sf::Color::White) {
+			texture.loadFromFile(path);
+			drawable.setTexture(texture);
+			drawable.setColor(color);
+		}
+		void Draw(sf::RenderTarget& render_target, Tabletop::Entity& e) override {
+			drawable.setPosition(sf::Vector2f(e.x, e.y));
+			render_target.draw(drawable);
+		}
+	};
+
+	AssetManager() { 
+		//AddAsset(Sprite("2_of_clubs.png")); 
+		//AddAsset(Sprite("Assets/back.png"));
+	}
 	template<typename T>
-	void AddAsset(T& asset) { 
-		asset.id = current_asset++; 
+	void AddRectangle(Rectangle& asset) { 
 		asset_list.push_back(std::make_unique<T>(asset)); 
+	}
+	void AddSprite(const std::string path = "Assets/Empty.png", const sf::Color& color = sf::Color::White) {
+		asset_list.push_back(std::make_unique<Sprite>(path,color));
 	}
 	unsigned int current_asset = 0;
 	std::vector<std::unique_ptr<Asset>> asset_list;
