@@ -11,6 +11,7 @@ add_executable (Tabletop-CL "Client.cpp"
 							"Client.h" 
 							"Tabletop-MP.cpp" 
 							"Tabletop-MP.h"
+							"Messages.h"
 							"Serialization.hpp"
 							"enet.h")
 add_executable (Tabletop-SR "Server.cpp" 
@@ -18,6 +19,7 @@ add_executable (Tabletop-SR "Server.cpp"
 							"Tabletop-MP.cpp"
 							"Tabletop-MP.h"
 							"Serialization.hpp"
+							"Messages.h"
 							"enet.h")
 
 # TODO: Add tests and install targets if needed.

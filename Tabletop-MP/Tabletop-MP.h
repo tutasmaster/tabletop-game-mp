@@ -38,7 +38,7 @@ public:
 		unsigned char id = 0;
 		std::string name = "EMPTY";
 		float width = 0, height = 0;
-		std::vector< std::unique_ptr<Tabletop::Entity>> entity_list;
+		std::vector<std::unique_ptr<Tabletop::Entity>> entity_list;
 	};
 
 	Tabletop();
