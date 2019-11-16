@@ -155,8 +155,14 @@ void Client::Update() {
 						
 				}
 				else if (window_event.type == sf::Event::MouseWheelScrolled) {
-					current_view.view.rotate(-window_event.mouseWheelScroll.delta * 3.6);
-					current_view.rotation += -window_event.mouseWheelScroll.delta * 3.6;
+					if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)){
+						current_view.view.rotate(-window_event.mouseWheelScroll.delta * 3.6);
+						current_view.rotation += -window_event.mouseWheelScroll.delta * 3.6;
+					}
+					else {
+						current_view.view.zoom(1 + (window_event.mouseWheelScroll.delta * 0.05));
+						current_view.zoom += window_event.mouseWheelScroll.delta * 0.05;
+					}
 				}
 			}
 		}
