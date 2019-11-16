@@ -48,7 +48,7 @@ public:
 
 	class PlayArea {
 	public:
-		PlayArea(float width = 500, float height = 500){}
+		PlayArea(std::string name = "EMPTY", float width = 500, float height = 500) : name(name), width(width), height(height){}
 		unsigned char id = 0;
 		std::string name = "EMPTY";
 		float width = 0, height = 0;

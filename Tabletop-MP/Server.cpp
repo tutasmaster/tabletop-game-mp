@@ -1,5 +1,13 @@
 #include "Server.h"
 
+void Server::Socket::Start() {
+	running = true;
+}
+
+Server::Server() : socket(this) {
+
+}
+
 void Server::Run() {
 
 }

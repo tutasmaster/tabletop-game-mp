@@ -3,5 +3,5 @@
 
 Tabletop::Tabletop()
 {
-	area_list.push_back(Tabletop::PlayArea(800,800));
+	area_list.push_back(Tabletop::PlayArea("EMPTY",800,800));
 }
