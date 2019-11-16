@@ -32,8 +32,19 @@ public:
 	AssetManager asset_manager;
 	Tabletop table;
 	sf::RenderWindow window;
+	sf::RenderTexture table_renderer;
+
+	struct View{
+		sf::View view;
+		float rotation = 0;
+		float zoom = 1;
+	}current_view;
+
+	Tabletop::Entity* GetEntityAt(unsigned char areaID, sf::Vector2f pos);
+
 	void Run();
 
+	void TableUpdate(sf::Event &e);
 
 	void Update();
 	void Draw();

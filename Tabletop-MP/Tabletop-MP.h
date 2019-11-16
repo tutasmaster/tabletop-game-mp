@@ -51,6 +51,7 @@ public:
 	struct Asset {
 	public:
 		virtual void Draw(sf::RenderTarget& render_target, Tabletop::Entity& e) = 0;
+		virtual bool CheckCollisionAtPoint(sf::Vector2f pos, Tabletop::Entity& e) { return false; };
 	};
 
 	class Rectangle : public Asset {
@@ -64,6 +65,7 @@ public:
 			drawable.setPosition(sf::Vector2f(e.x, e.y)); 
 			render_target.draw(drawable); 
 		}
+		bool CheckCollisionAtPoint(sf::Vector2f pos, Tabletop::Entity& e) override { return (pos.x > e.x && pos.x < e.x + drawable.getSize().x && pos.y > e.y && pos.y < e.y + drawable.getSize().y); }
 	};
 
 	class Sprite : public Asset {
@@ -79,6 +81,7 @@ public:
 			drawable.setPosition(sf::Vector2f(e.x, e.y));
 			render_target.draw(drawable);
 		}
+		bool CheckCollisionAtPoint(sf::Vector2f pos, Tabletop::Entity& e) override { return (pos.x > e.x&& pos.x < e.x + texture.getSize().x && pos.y > e.y&& pos.y < e.y + texture.getSize().y); }
 	};
 
 	AssetManager() { 

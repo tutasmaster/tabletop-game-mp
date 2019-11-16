@@ -3,11 +3,14 @@
 
 Tabletop::Tabletop()
 {
-	area_list.push_back(Tabletop::PlayArea("EMPTY",800,600));
-	Tabletop::Card simple_object;
-	simple_object.asset_id = 0;
-	simple_object.front_id = 1;
-	simple_object.back_id = 0;
-	simple_object.x = 100; simple_object.y = 100;
-	area_list[0].entity_list.push_back(std::make_unique<Tabletop::Card>(simple_object));
+	area_list.push_back(Tabletop::PlayArea("EMPTY",1280,720));
+	Tabletop::Entity board;
+	board.asset_id = 2;
+	board.is_movable = false;
+	Tabletop::Card card;
+	card.front_id = 1;
+	card.x = 100;
+	card.y = 100;
+	area_list[0].entity_list.push_back(std::make_unique<Tabletop::Entity>(board));
+	area_list[0].entity_list.push_back(std::make_unique<Tabletop::Card>(card));
 }

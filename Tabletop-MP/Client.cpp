@@ -85,39 +85,56 @@ Client::Client() : socket(this){
 
 }
 
+void Client::TableUpdate(sf::Event &e) {
+	if (e.type == sf::Event::MouseButtonPressed) {
+		auto et = GetEntityAt(0, sf::Vector2f(e.mouseButton.x, e.mouseButton.y));
+		if (et == nullptr) {
+			std::cout << "Nothing was found under the cursor\n";
+		}
+		else {
+			std::cout << "Found asset " << et->asset_id << " under the cursor.\n";
+		}
+	}
+}
+
 void Client::Update() {
 	sf::Event window_event;
 	while (window.pollEvent(window_event)) {
-		if (window_event.type == sf::Event::Closed){
+		if (window_event.type == sf::Event::Closed) {
 			window.close();
 		}
-		else if (window_event.type == sf::Event::MouseButtonPressed) {
-			table.area_list[0].entity_list[0]->Flip();
-			Serial::Packet p;
-			p << (unsigned char)MESSAGE_TYPE::UPDATE_ENTITY << (unsigned char)0 << (unsigned char)0 << (unsigned char)MESSAGE_ENTITY::FLIP;
-			ENetPacket* packet = p.GetENetPacket();
-			enet_peer_send(socket.server, 0, packet);
-			enet_host_flush(socket.client);
+		else {
+			if (sf::Mouse::getPosition().y > 20) {
+				TableUpdate(window_event);
+			}
 		}
 	}
 }
 
 void Client::Draw() {
-	window.clear();
-	sf::RectangleShape background;
-	background.setFillColor(sf::Color(25, 25, 25, 255));
-	background.setSize(sf::Vector2f(table.area_list[0].width, table.area_list[0].height));
-	window.draw(background);
+	window.clear(sf::Color::White);
+	table_renderer.clear(sf::Color(25, 25, 25, 255));
 	for (auto& e : table.area_list[0].entity_list) {
-		asset_manager.asset_list[e->asset_id]->Draw(window, *e);
+		asset_manager.asset_list[e->asset_id]->Draw(table_renderer, *e);
 	}
+	table_renderer.setView(current_view.view);
+	table_renderer.display();
+	const sf::Texture table_texture = table_renderer.getTexture();
+	sf::Sprite table_sprite(table_texture);
+	table_sprite.setPosition(sf::Vector2f(0, 20));
+	window.draw(table_sprite);
 	window.display();
 }
 
 void Client::Run() {
+	table_renderer.create(1280, 700);
+	current_view.view.setSize(sf::Vector2f(1280, 700));
+	current_view.view.setViewport(sf::FloatRect(0, 0, 1, 1));
+	current_view.view.setCenter(sf::Vector2f(640, 350));
 	window.create(sf::VideoMode(1280, 720), "Tabletop", 5U);
 	asset_manager.AddSprite("Assets/back.png");
 	asset_manager.AddSprite("Assets/2_of_clubs_th.jpg");
+	asset_manager.AddSprite("Assets/board.jpg");
 
 	socket.Connect();
 	while(window.isOpen()){
@@ -132,4 +149,14 @@ int main() {
 	Client client;
 	client.Run();
 	return 0;
+}
+
+Tabletop::Entity* Client::GetEntityAt(unsigned char areaID, sf::Vector2f pos)
+{
+	for (int i = table.area_list[areaID].entity_list.size() - 1; i > -1; i--) {
+		Tabletop::Entity& e = *table.area_list[areaID].entity_list[i];
+		if (asset_manager.asset_list[e.asset_id]->CheckCollisionAtPoint(pos, e))
+			return &e;
+	}
+	return nullptr;
 }
