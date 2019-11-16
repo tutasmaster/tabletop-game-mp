@@ -2,6 +2,8 @@
 #pragma once
 
 #include "Tabletop-MP.h"
+
+#define ENET_IMPLEMENTATION
 #include "enet.h"
 
 class Server {

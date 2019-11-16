@@ -20,6 +20,8 @@ void Client::Socket::Connect(std::string ip = "127.0.0.1", unsigned short port =
 	else
 		return;
 
+	std::cout << "Connected to " << ip << ":" << port << "!\n";
+
 	enet_host_flush(client);
 }
 
@@ -52,7 +54,10 @@ Client::Client() : socket(this){
 }
 
 void Client::Run() {
-
+	socket.Connect();
+	while (socket.connected) {
+		socket.Update();
+	}
 }
 
 int main() {

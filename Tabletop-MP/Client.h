@@ -3,6 +3,7 @@
 
 #include "Tabletop-MP.h"
 
+#define ENET_IMPLEMENTATION
 #include "enet.h"
 #include "SFML/Graphics.hpp"
 
@@ -12,7 +13,7 @@ public:
 	public:
 		Socket(Client * client) : owner(client) {}
 
-		void Connect(std::string ip = "127.0.0.1", unsigned short port = 7777);
+		void Connect(std::string ip, unsigned short port);
 		void Update();
 
 		ENetHost* client = nullptr;

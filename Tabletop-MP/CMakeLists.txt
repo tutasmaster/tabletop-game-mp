@@ -10,12 +10,16 @@ find_package(SFML COMPONENTS graphics audio REQUIRED)
 add_executable (Tabletop-CL "Client.cpp" 
 							"Client.h" 
 							"Tabletop-MP.cpp" 
-							"Tabletop-MP.h")
+							"Tabletop-MP.h"
+							"Serialization.hpp"
+							"enet.h")
 add_executable (Tabletop-SR "Server.cpp" 
 							"Server.h" 
 							"Tabletop-MP.cpp"
-							"Tabletop-MP.h")
+							"Tabletop-MP.h"
+							"Serialization.hpp"
+							"enet.h")
 
 # TODO: Add tests and install targets if needed.
 target_link_libraries(Tabletop-CL sfml-graphics sfml-audio sfml-system)
-target_link_libraries(Tabletop-SR sfml-system)
+target_link_libraries(Tabletop-SR sfml-graphics sfml-audio sfml-system)
