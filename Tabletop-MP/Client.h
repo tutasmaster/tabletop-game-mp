@@ -6,6 +6,8 @@
 #define ENET_IMPLEMENTATION
 #include "enet.h"
 #include "SFML/Graphics.hpp"
+#include "Serialization.hpp"
+#include "Messages.h"
 
 class Client {
 public:
@@ -15,6 +17,8 @@ public:
 
 		void Connect(std::string ip, unsigned short port);
 		void Update();
+		void HandlePacket(Serial::Packet& packet);
+		void UpdateEntity(Serial::Packet& packet);
 
 		ENetHost* client = nullptr;
 		ENetPeer* server = nullptr;

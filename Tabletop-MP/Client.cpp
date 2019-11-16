@@ -35,6 +35,8 @@ void Client::Socket::Update() {
 			break;
 		case ENET_EVENT_TYPE_RECEIVE:
 		{
+			Serial::Packet packet(network_event.packet);
+			HandlePacket(packet);
 			enet_packet_destroy(network_event.packet);
 		}
 		break;
@@ -49,6 +51,29 @@ void Client::Socket::Update() {
 
 }
 
+void Client::Socket::HandlePacket(Serial::Packet& packet) {
+	unsigned char id = 0;
+	packet >> id;
+	switch ((MESSAGE_TYPE)id) {
+	case MESSAGE_TYPE::UPDATE_TABLE:
+		break;
+	case MESSAGE_TYPE::UPDATE_ENTITY:
+		UpdateEntity(packet);
+		break;
+	}
+}
+
+void Client::Socket::UpdateEntity(Serial::Packet& packet) {
+	unsigned char table_id = 0, entity_id = 0, fun = 0;
+	packet >> table_id >> entity_id >> fun;
+	Tabletop::Entity &e = *owner->table.area_list[table_id].entity_list[entity_id];
+	switch ((MESSAGE_ENTITY)fun) {
+	case MESSAGE_ENTITY::FLIP:
+		e.Flip();
+		break;
+	}
+}
+
 Client::Client() : socket(this){
 
 }
@@ -58,8 +83,6 @@ void Client::Update() {
 	while (window.pollEvent(window_event)) {
 		if (window_event.type == sf::Event::Closed)
 			window.close();
-		if (window_event.type == sf::Event::MouseButtonPressed)
-			table.area_list[0].entity_list[0]->Flip();
 	}
 }
 
