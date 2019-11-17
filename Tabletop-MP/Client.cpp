@@ -73,13 +73,17 @@ void Client::Socket::HandlePacket(Serial::Packet& packet) {
 void Client::Socket::UpdateEntity(Serial::Packet& packet) {
 	unsigned char table_id = 0, entity_id = 0, fun = 0;
 	packet >> table_id >> entity_id >> fun;
-	Tabletop::Entity &e = *owner->table.area_list[table_id].entity_list[entity_id];
+	Tabletop::Entity* e = owner->table.area_list[table_id].FindEntity(entity_id);
+	if (e == nullptr) {
+		std::cout << "INVALID ENTITY UPDATED!\n";
+		return;
+	}
 	switch ((MESSAGE_ENTITY)fun) {
 	case MESSAGE_ENTITY::ASSET_ID:
 	{
 		unsigned char asset_id = 0;
 		packet >> asset_id;
-		e.asset_id = asset_id;
+		e->asset_id = asset_id;
 	}
 		break;
 	case MESSAGE_ENTITY::POS:
@@ -87,17 +91,22 @@ void Client::Socket::UpdateEntity(Serial::Packet& packet) {
 	{
 		float x = 0, y = 0;
 		packet >> x >> y;
-		e.x = x; e.y = y;
+		e->x = x; e->y = y;
 	}
 		break;
 	case MESSAGE_ENTITY::FLIP:
-		e.Flip();
+	{
+		owner->table.area_list[e->area_id].Flip(*e);
+		unsigned char asset_id = 0;
+		packet >> asset_id;
+		e->asset_id = asset_id;
+	}
 		break;
 	case MESSAGE_ENTITY::ROTATE:
 	{
 		float rotation = 0;
 		packet >> rotation;
-		e.rotation = rotation;
+		e->rotation = rotation;
 	}
 		break;
 	}
@@ -238,6 +247,9 @@ void Client::Run() {
 	asset_manager.AddSprite("Assets/back.png");
 	asset_manager.AddSprite("Assets/2_of_clubs_th.jpg");
 	asset_manager.AddSprite("Assets/board.jpg");
+	asset_manager.AddSprite("Assets/empty.png");
+	asset_manager.AddSprite("Assets/3_of_clubs_th.jpg");
+	asset_manager.AddSprite("Assets/4_of_clubs_th.jpg");
 
 	socket.Connect();
 	float time = 0;
@@ -268,7 +280,6 @@ Tabletop::Entity* Client::GetEntityAt(unsigned char areaID, sf::Vector2f pos)
 
 void Client::EntityManipulator::Flip(Tabletop::Entity& e)
 {
-	e.Flip();
 	Serial::Packet packet;
 	packet << (unsigned char) MESSAGE_TYPE::UPDATE_ENTITY << (unsigned char)0 << e.id << (unsigned char)MESSAGE_ENTITY::FLIP;
 	ENetPacket* p = packet.GetENetPacket();

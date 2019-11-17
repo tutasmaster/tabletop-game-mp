@@ -64,19 +64,23 @@ void Server::Socket::HandlePacket(Serial::Packet& packet) {
 void Server::Socket::UpdateEntity(Serial::Packet& packet) {
 	unsigned char table_id = 0, entity_id = 0, fun = 0;
 	packet >> table_id >> entity_id >> fun;
-	Tabletop::Entity& e = *owner->table.area_list[table_id].entity_list[entity_id];
+	Tabletop::Entity * e = owner->table.area_list[table_id].FindEntity(entity_id);
+	if (e == nullptr) {
+		std::cout << "INVALID ENTITY UPDATED!\n";
+		return;
+	}
 	switch ((MESSAGE_ENTITY)fun) {
 	case MESSAGE_ENTITY::FLIP:
 		std::cout << "AN ENTITY HAS BEEN FLIPPED!\n";
-		e.Flip();
-		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::ASSET_ID);
+		owner->table.area_list[e->area_id].Flip(*e);
+		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::FLIP);
 		break;
 	case MESSAGE_ENTITY::ROTATE:
 		std::cout << "AN ENTITY HAS BEEN ROTATED!\n";
 	{
 		float rotation = 0;
 		packet >> rotation;
-		e.rotation = rotation;
+		e->rotation = rotation;
 		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::ROTATE);
 	}
 		break;
@@ -85,8 +89,8 @@ void Server::Socket::UpdateEntity(Serial::Packet& packet) {
 	{
 		float x = 0, y = 0;
 		packet >> x >> y;
-		e.x = x;
-		e.y = y;
+		e->x = x;
+		e->y = y;
 		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::POS);
 	}
 		break;
@@ -94,8 +98,8 @@ void Server::Socket::UpdateEntity(Serial::Packet& packet) {
 	{
 		float x = 0, y = 0;
 		packet >> x >> y;
-		e.x = x;
-		e.y = y;
+		e->x = x;
+		e->y = y;
 		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::POS_UNRELIABLE);
 	}
 		break;
@@ -104,18 +108,26 @@ void Server::Socket::UpdateEntity(Serial::Packet& packet) {
 
 void Server::Socket::BroadcastEntityStateUpdate(unsigned char table_id, unsigned char entity_id, unsigned char entity_function)
 {
+	Tabletop::Entity* e = owner->table.area_list[table_id].FindEntity(entity_id);
+	if (e == nullptr) {
+		std::cout << "INVALID ENTITY UPDATED!\n";
+		return;
+	}
 	Serial::Packet p;
 	p << (unsigned char) MESSAGE_TYPE::UPDATE_ENTITY << table_id << entity_id << entity_function;
 	switch ((MESSAGE_ENTITY)entity_function) {
 	case MESSAGE_ENTITY::ASSET_ID:
-		p << owner->table.area_list[table_id].entity_list[entity_id]->asset_id;
+		p << e->asset_id;
+		break;
+	case MESSAGE_ENTITY::FLIP:
+		p << e->asset_id;
 		break;
 	case MESSAGE_ENTITY::ROTATE:
-		p << owner->table.area_list[table_id].entity_list[entity_id]->rotation;
+		p << e->rotation;
 		break;
 	case MESSAGE_ENTITY::POS:
 	case MESSAGE_ENTITY::POS_UNRELIABLE:
-		p << owner->table.area_list[table_id].entity_list[entity_id]->x << owner->table.area_list[table_id].entity_list[entity_id]->y;
+		p << e->x << e->y;
 		break;
 	}
 	ENetPacket* packet = p.GetENetPacket(

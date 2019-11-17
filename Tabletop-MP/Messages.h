@@ -23,7 +23,7 @@ enum class MESSAGE_ENTITY : unsigned char {
 	MOVABLE = 4,        //BOOL IS_MOVABLE
 	ASSET_ID = 5,       //UNSIGNED INTEGER ASSET_ID
 	FLAGS = 6,	        //UNSIGNED CHAR FLAGS
-	FLIP = 7,	        
+	FLIP = 7,	        //UNSIGNED INTEGER ASSET_ID
 	ROTATE = 8,         //FLOAT ROTATION
 	POS_UNRELIABLE = 9, //FLOAT X + FLOAT Y
 };
