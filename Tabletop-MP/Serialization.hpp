@@ -28,7 +28,7 @@ namespace Serial {
 			return _packet;
 		}
 
-		Packet& operator<<(float d) { data.push_back(((long)d & 0xff)); data.push_back(((long)d & 0xff00) >> 8); data.push_back(((long)d & 0xff0000) >> 16); data.push_back(((long)d & 0xff000000) >> 24); return *this; }
+		Packet& operator<<(float d) { std::string s(std::to_string(d)); *this << s; return *this; } //TODO, DONT SEND A STRING
 		Packet& operator<<(unsigned char d) { data.push_back(d); return *this; }
 		Packet& operator<<(unsigned short d)	{ data.push_back(d & 0xFF); data.push_back((d & 0xFF00) >> 8); return *this; }
 		Packet& operator<<(unsigned int d) { data.push_back(d & 0xFF); data.push_back((d & 0xFF00) >> 8); data.push_back((d & 0xFF0000) >> 16); data.push_back((d & 0xFF000000) >> 24); return *this; }
@@ -44,7 +44,7 @@ namespace Serial {
 			return *this;
 		}
 
-		Packet& operator>>(float& d) { long temp = data[cur] + (data[cur + 1] << 8) + (data[cur + 2] << 16) + (data[cur + 3] << 24); d = (float)temp; cur += 4; return *this; }
+		Packet& operator>>(float& d) { std::string s; *this >> s; d = std::stof(s); return *this; } //TODO, DONT EXTRACT A STRING
 		Packet& operator>>(unsigned char& d)	{ d = data[cur]; cur++; return *this; }
 		Packet& operator>>(unsigned short& d)	{ d = data[cur] + (data[cur + 1] << 8); cur += 2; return *this; }
 		Packet& operator>>(unsigned int& d) { d = data[cur] + (data[cur + 1] << 8) + (data[cur + 2] << 16) + (data[cur + 3] << 24); cur += 4; return *this; }
