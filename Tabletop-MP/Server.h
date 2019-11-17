@@ -26,6 +26,8 @@ public:
 		void HandlePacket(Serial::Packet& packet);
 		void UpdateEntity(Serial::Packet& packet);
 
+		void SyncronizeMap(ENetPeer* peer);
+
 		void BroadcastEntityStateUpdate(
 			unsigned char table_id, 
 			unsigned char entity_id, 

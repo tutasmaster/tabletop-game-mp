@@ -47,6 +47,7 @@ void Server::Socket::OnConnect(ENetEvent& e) {
 	u.peer = e.peer;
 	u.id = current_id++;
 	connected_clients.push_back(u);
+	SyncronizeMap(u.peer);
 }
 
 void Server::Socket::HandlePacket(Serial::Packet& packet) {
@@ -64,15 +65,15 @@ void Server::Socket::HandlePacket(Serial::Packet& packet) {
 void Server::Socket::UpdateEntity(Serial::Packet& packet) {
 	unsigned char table_id = 0, entity_id = 0, fun = 0;
 	packet >> table_id >> entity_id >> fun;
-	Tabletop::Entity * e = owner->table.area_list[table_id].FindEntity(entity_id);
-	if (e == nullptr) {
+	Tabletop::Entity * e = owner->table.area_list[table_id]->FindEntity(entity_id);
+	if (e == nullptr && fun != (unsigned char)MESSAGE_ENTITY::INSERT) {
 		std::cout << "INVALID ENTITY UPDATED!\n";
 		return;
 	}
 	switch ((MESSAGE_ENTITY)fun) {
 	case MESSAGE_ENTITY::FLIP:
 		std::cout << "AN ENTITY HAS BEEN FLIPPED!\n";
-		owner->table.area_list[e->area_id].Flip(*e);
+		owner->table.area_list[e->area_id]->Flip(*e);
 		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::FLIP);
 		break;
 	case MESSAGE_ENTITY::ROTATE:
@@ -106,9 +107,38 @@ void Server::Socket::UpdateEntity(Serial::Packet& packet) {
 	}
 }
 
+void Server::Socket::SyncronizeMap(ENetPeer* peer)
+{
+	Serial::Packet initialize;
+	initialize << (unsigned char) MESSAGE_TYPE::INITIALIZE;
+	enet_peer_send(peer, 0, initialize.GetENetPacket());
+	enet_host_flush(server);
+	for (auto& a : owner->table.area_list) {
+		Serial::Packet area_packet;
+		area_packet << (unsigned char)MESSAGE_TYPE::UPDATE_TABLE << a->id << (unsigned char)MESSAGE_TABLE::INSERT << a->name << a->width << a->height;
+		enet_peer_send(peer, 0, area_packet.GetENetPacket());
+		enet_host_flush(server);
+		for (auto& e : a->entity_list) {
+			Serial::Packet entity_packet;
+			entity_packet << (unsigned char)MESSAGE_TYPE::UPDATE_ENTITY << a->id << e->id << (unsigned char)MESSAGE_ENTITY::INSERT << (unsigned char)e->type << e->x << e->y << e->rotation << e->asset_id;
+			if (e->type == e->card) {
+				entity_packet << ((Tabletop::Card*)e.get())->front_id << ((Tabletop::Card*)e.get())->back_id;
+			}
+			else if (e->type == e->deck) {
+				auto deck = ((Tabletop::Deck*)e.get());
+				entity_packet << deck->empty_id << (unsigned char)deck->cards.size();
+				for (auto& c : deck->cards)
+					entity_packet << c;
+			}
+			enet_peer_send(peer, 0, entity_packet.GetENetPacket());
+			enet_host_flush(server);
+		}
+	}
+}
+
 void Server::Socket::BroadcastEntityStateUpdate(unsigned char table_id, unsigned char entity_id, unsigned char entity_function)
 {
-	Tabletop::Entity* e = owner->table.area_list[table_id].FindEntity(entity_id);
+	Tabletop::Entity* e = owner->table.area_list[table_id]->FindEntity(entity_id);
 	if (e == nullptr) {
 		std::cout << "INVALID ENTITY UPDATED!\n";
 		return;
@@ -144,6 +174,51 @@ Server::Server() : socket(this) {
 }
 
 void Server::Run() {
+
+	table.area_list.push_back(std::make_unique<Tabletop::PlayArea>("EMPTY", 1280, 720));
+	Tabletop::Entity board;
+	board.id = 0;
+	board.asset_id = 3;
+	board.is_movable = false;
+	Tabletop::Card card;
+	card.id = 1;
+	card.asset_id = 2;
+	card.front_id = 1;
+	card.back_id = 2;
+	card.x = 100;
+	card.y = 100;
+	card.rotation = 0;
+	Tabletop::Card card1;
+	card1.id = 2;
+	card1.asset_id = 5;
+	card1.front_id = 1;
+	card1.back_id = 5;
+	card1.x = 100;
+	card1.y = 100;
+	card1.rotation = 0;
+	Tabletop::Card card2;
+	card2.id = 3;
+	card2.asset_id = 6;
+	card2.front_id = 1;
+	card2.back_id = 6;
+	card2.x = 100;
+	card2.y = 100;
+	card2.rotation = 0;
+	Tabletop::Deck deck(0);
+	deck.id = 4;
+	deck.x = 200;
+	deck.y = 200;
+	deck.asset_id = 4;
+	deck.empty_id = 4;
+	table.area_list[0]->entity_list.push_back(std::make_unique<Tabletop::Entity>(board));
+	table.area_list[0]->entity_list.push_back(std::make_unique<Tabletop::Card>(card));
+	table.area_list[0]->entity_list.push_back(std::make_unique<Tabletop::Card>(card1));
+	table.area_list[0]->entity_list.push_back(std::make_unique<Tabletop::Card>(card2));
+	table.area_list[0]->entity_list.push_back(std::make_unique<Tabletop::Deck>(deck));
+	table.area_list[0]->InsertIntoDeck((Tabletop::Deck&)(*table.area_list[0]->entity_list[4]), 1);
+	table.area_list[0]->InsertIntoDeck((Tabletop::Deck&)(*table.area_list[0]->entity_list[4]), 2);
+	table.area_list[0]->InsertIntoDeck((Tabletop::Deck&)(*table.area_list[0]->entity_list[4]), 3);
+
 	socket.Start();
 	while (socket.connected) {
 		socket.Update();

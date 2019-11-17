@@ -63,9 +63,13 @@ void Client::Socket::HandlePacket(Serial::Packet& packet) {
 	packet >> id;
 	switch ((MESSAGE_TYPE)id) {
 	case MESSAGE_TYPE::UPDATE_TABLE:
+		UpdateTable(packet);
 		break;
 	case MESSAGE_TYPE::UPDATE_ENTITY:
 		UpdateEntity(packet);
+		break;
+	case MESSAGE_TYPE::INITIALIZE:
+		owner->table.area_list.clear();
 		break;
 	}
 }
@@ -73,12 +77,71 @@ void Client::Socket::HandlePacket(Serial::Packet& packet) {
 void Client::Socket::UpdateEntity(Serial::Packet& packet) {
 	unsigned char table_id = 0, entity_id = 0, fun = 0;
 	packet >> table_id >> entity_id >> fun;
-	Tabletop::Entity* e = owner->table.area_list[table_id].FindEntity(entity_id);
-	if (e == nullptr) {
+	Tabletop::PlayArea* a = owner->table.FindTable(table_id);
+	Tabletop::Entity* e = a->FindEntity(entity_id);
+	if (e == nullptr && fun != (unsigned char)MESSAGE_ENTITY::INSERT) {
 		std::cout << "INVALID ENTITY UPDATED!\n";
 		return;
 	}
 	switch ((MESSAGE_ENTITY)fun) {
+	case MESSAGE_ENTITY::INSERT:
+	{
+		unsigned char id = entity_id;
+		unsigned char area_id = table_id;
+		unsigned char type = 0;
+		packet >> type;
+		switch (type) {
+		case 0: 
+		{
+			Tabletop::Entity ent;
+			ent.id = entity_id; ent.area_id = table_id;
+			ent.type = (Tabletop::Entity::Type)type;
+			packet >> ent.x >> ent.y >> ent.rotation >> ent.asset_id;
+			a->entity_list.push_back(std::make_unique<Tabletop::Entity>(ent));
+		}
+		break;
+		case 1:
+		{
+			Tabletop::Card ent;
+			ent.id = entity_id; ent.area_id = table_id;
+			ent.type = (Tabletop::Entity::Type)type;
+			packet >> ent.x;
+			packet >> ent.y; 
+			packet >> ent.rotation;
+			packet >> ent.asset_id;
+			packet >> ent.front_id;
+			packet >> ent.back_id;
+			a->entity_list.push_back(std::make_unique<Tabletop::Card>(ent));
+		}
+		break;
+		case 2:
+		{
+			Tabletop::Deck ent;
+			ent.id = entity_id; ent.area_id = table_id;
+			ent.type = (Tabletop::Entity::Type)type;
+			unsigned int asset_id = 0;
+			packet >> ent.x;
+			packet >> ent.y;
+			packet >> ent.rotation;
+			packet >> asset_id;
+			packet >> ent.empty_id;
+			unsigned char size = 0;
+			packet >> size;
+			unsigned char value = a->entity_list.size();
+			a->entity_list.push_back(std::make_unique<Tabletop::Deck>(ent));
+			for (int i = 0; i < size; i++) {
+				unsigned char temp = 0;
+				packet >> temp;
+				a->InsertIntoDeck((Tabletop::Deck&)(*a->entity_list[value]), temp);
+			}
+			a->entity_list[value].get()->asset_id = asset_id;
+		}
+		break;
+		}
+
+		//packet >> entity.x >> entity.y >> entity.rotation >> entity.asset_id >> entity.type
+	}
+	break;
 	case MESSAGE_ENTITY::ASSET_ID:
 	{
 		unsigned char asset_id = 0;
@@ -96,7 +159,7 @@ void Client::Socket::UpdateEntity(Serial::Packet& packet) {
 		break;
 	case MESSAGE_ENTITY::FLIP:
 	{
-		owner->table.area_list[e->area_id].Flip(*e);
+		owner->table.area_list[e->area_id]->Flip(*e);
 		unsigned char asset_id = 0;
 		packet >> asset_id;
 		e->asset_id = asset_id;
@@ -112,6 +175,28 @@ void Client::Socket::UpdateEntity(Serial::Packet& packet) {
 	}
 }
 
+void Client::Socket::UpdateTable(Serial::Packet& packet) {
+	unsigned char table_id = 0, fun = 0;
+	packet >> table_id >> fun;
+	Tabletop::PlayArea* e  = owner->table.FindTable(table_id);
+	if (e == nullptr && fun != (unsigned char)MESSAGE_TABLE::INSERT) {
+		std::cout << "INVALID ENTITY UPDATED!\n";
+		return;
+	}
+	switch ((MESSAGE_TABLE)fun) {
+	case MESSAGE_TABLE::INSERT:
+	{
+		float width, height;
+		std::string name;
+		packet >> name >> width >> height;
+		owner->table.area_list.push_back(std::make_unique<Tabletop::PlayArea>(Tabletop::PlayArea(name, table_id,width,height)));
+	}
+	break;
+	
+	}
+}
+
+
 Client::Client() : socket(this), eman(this){
 
 }
@@ -120,7 +205,7 @@ void Client::TableUpdate(sf::Event &e) {
 	if (e.type == sf::Event::MouseButtonPressed) {
 		if(e.mouseButton.button == sf::Mouse::Button::Left){
 			if(current_entity == nullptr){
-				auto et = GetEntityAt(0, sf::Vector2f(e.mouseButton.x, e.mouseButton.y - 20));
+				auto et = GetEntityAt(0, mouse_table_position);
 				if (et == nullptr) {
 					std::cout << "Nothing was found under the cursor\n";
 				}
@@ -159,15 +244,47 @@ void Client::TableUpdate(sf::Event &e) {
 	}
 }
 
-void Client::Update() {
+void Client::Update(float time) {
 	window.setView(current_view.view);
 	mouse_table_position = window.mapPixelToCoords(sf::Mouse::getPosition(window)) - sf::Vector2f(0,10);
 	window.setView(sf::View(sf::FloatRect(0,0,1280, 720)));
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+		float x = cos(((current_view.rotation + 180) / 180) * 3.14159265358979323846);
+		float y = sin(((current_view.rotation + 180) / 180) * 3.14159265358979323846);
+		current_view.view.move(x * time * 200, y * time * 200);
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)){
+		float x = cos(((current_view.rotation) / 180) * 3.14159265358979323846);
+		float y = sin(((current_view.rotation) / 180) * 3.14159265358979323846);
+		current_view.view.move(x * time * 200, y * time * 200);
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+		float x = cos(((current_view.rotation - 90) / 180) * 3.14159265358979323846);
+		float y = sin(((current_view.rotation - 90) / 180) * 3.14159265358979323846);
+		current_view.view.move(x * time * 200, y * time * 200);
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+		float x = cos(((current_view.rotation + 90) / 180) * 3.14159265358979323846);
+		float y = sin(((current_view.rotation + 90) / 180) * 3.14159265358979323846);
+		current_view.view.move(x * time * 200, y * time * 200);
+	}
+		
 
 	sf::Event window_event;
 	while (window.pollEvent(window_event)) {
 		if (window_event.type == sf::Event::Closed) {
 			window.close();
+		}
+		else if (window_event.type == sf::Event::MouseWheelScrolled) {
+			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
+				current_view.view.rotate(-window_event.mouseWheelScroll.delta * 3.6);
+				current_view.rotation += -window_event.mouseWheelScroll.delta * 3.6;
+			}
+			else {
+				current_view.view.zoom(1 - (window_event.mouseWheelScroll.delta * 0.05));
+				current_view.zoom -= window_event.mouseWheelScroll.delta * 0.05;
+			}
 		}
 		else {
 			if (sf::Mouse::getPosition(window).y > 20) {
@@ -183,37 +300,6 @@ void Client::Update() {
 						current_view.view.rotate(5);
 						current_view.rotation += 5;
 					}
-					else if (window_event.key.code == sf::Keyboard::W) {
-						float x = cos(((current_view.rotation + 90) / 180) * 3.14159265358979323846);
-						float y = sin(((current_view.rotation + 90) / 180) * 3.14159265358979323846);
-						current_view.view.move(sf::Vector2f(x * -10, y * -10));
-					}	
-					else if (window_event.key.code == sf::Keyboard::A) {
-						float x = cos((current_view.rotation / 180) * 3.14159265358979323846);
-						float y = sin((current_view.rotation / 180) * 3.14159265358979323846);
-						current_view.view.move(sf::Vector2f(x * -10, y * -10));
-					}
-					else if (window_event.key.code == sf::Keyboard::S) {
-						float x = cos(((current_view.rotation+90) / 180) * 3.14159265358979323846);
-						float y = sin(((current_view.rotation+90) / 180) * 3.14159265358979323846);
-						current_view.view.move(sf::Vector2f(x * 10, y*10));
-					}
-					else if (window_event.key.code == sf::Keyboard::D) {
-						float x = cos((current_view.rotation / 180) * 3.14159265358979323846);
-						float y = sin((current_view.rotation / 180) * 3.14159265358979323846);
-						current_view.view.move(sf::Vector2f(x * 10, y * 10));
-					}
-						
-				}
-				else if (window_event.type == sf::Event::MouseWheelScrolled) {
-					if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)){
-						current_view.view.rotate(-window_event.mouseWheelScroll.delta * 3.6);
-						current_view.rotation += -window_event.mouseWheelScroll.delta * 3.6;
-					}
-					else {
-						current_view.view.zoom(1 + (window_event.mouseWheelScroll.delta * 0.05));
-						current_view.zoom += window_event.mouseWheelScroll.delta * 0.05;
-					}
 				}
 			}
 		}
@@ -223,11 +309,13 @@ void Client::Update() {
 void Client::Draw(float time) {
 	window.clear(sf::Color::White);
 	table_renderer.clear(sf::Color(25, 25, 25, 255));
-	for (auto& e : table.area_list[0].entity_list) {
-		e->display_x += Math::Lerp(e->display_x, e->x, Math::Clamp(time * 5, 0, 1));
-		e->display_y += Math::Lerp(e->display_y, e->y, Math::Clamp(time * 5, 0, 1));
-		e->display_rotation += Math::Lerp(e->display_rotation, e->rotation, Math::Clamp(time * 5,0,1));
-		asset_manager.asset_list[e->asset_id]->Draw(table_renderer, *e);
+	for(auto &a : table.area_list){
+		for (auto& e : a->entity_list) {
+			e->display_x += Math::Lerp(e->display_x, e->x, Math::Clamp(time * 5, 0, 1));
+			e->display_y += Math::Lerp(e->display_y, e->y, Math::Clamp(time * 5, 0, 1));
+			e->display_rotation += Math::Lerp(e->display_rotation, e->rotation, Math::Clamp(time * 5,0,1));
+			asset_manager.asset_list[e->asset_id]->Draw(table_renderer, *e);
+		}
 	}
 	table_renderer.setView(current_view.view);
 	table_renderer.display();
@@ -256,7 +344,7 @@ void Client::Run() {
 	while(window.isOpen()){
 		if (socket.connected) 
 			socket.Update(time);
-		Update();
+		Update(time);
 		Draw(time);
 		time = timer.restart().asSeconds();
 	}
@@ -270,8 +358,8 @@ int main() {
 
 Tabletop::Entity* Client::GetEntityAt(unsigned char areaID, sf::Vector2f pos)
 {
-	for (int i = table.area_list[areaID].entity_list.size() - 1; i > -1; i--) {
-		Tabletop::Entity& e = *table.area_list[areaID].entity_list[i];
+	for (int i = table.area_list[areaID]->entity_list.size() - 1; i > -1; i--) {
+		Tabletop::Entity& e = *table.area_list[areaID]->entity_list[i];
 		if (asset_manager.asset_list[e.asset_id]->CheckCollisionAtPoint(pos, e))
 			return &e;
 	}

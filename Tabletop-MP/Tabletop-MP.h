@@ -14,10 +14,10 @@ public:
 
 	class Entity {
 	public:
-		enum Type {
-			entity,
-			card,
-			deck
+		enum Type : unsigned char {
+			entity = 0,
+			card = 1,
+			deck = 2
 		}type = entity;
 
 		bool operator== (unsigned char p) { return id == p; }
@@ -56,13 +56,18 @@ public:
 
 	class PlayArea {
 	public:
-		PlayArea(std::string name = "EMPTY", float width = 500, float height = 500) : name(name), width(width), height(height){}
-		unsigned char id = 0;
+		PlayArea(std::string name = "EMPTY", unsigned char id = 0, float width = 500, float height = 500) : name(name), width(width), height(height), id(id) {}
 		std::string name = "EMPTY";
+		unsigned char id = 0;
 		float width = 0, height = 0;
 		unsigned char current_id = 0;
 		Tabletop::Entity * FindEntity(unsigned char id) {
-			return (*std::find_if(entity_list.begin(), entity_list.end(), [&, id](const std::unique_ptr<Entity>& e) {return e->id == id; })).get();
+			if (entity_list.size() == 0)
+				return nullptr;
+			auto ent = std::find_if(entity_list.begin(), entity_list.end(), [&, id](const std::unique_ptr<Entity>& e) {return e->id == id; });
+			if (ent == entity_list.end())
+				return nullptr;
+			return (*ent).get();
 		}
 
 		void Flip(Entity& entity) {
@@ -105,9 +110,18 @@ public:
 		std::vector<std::unique_ptr<Tabletop::Entity>> entity_list;
 	};
 
+	Tabletop::PlayArea* FindTable(unsigned char id) {
+		if (area_list.size() == 0)
+			return nullptr;
+		auto& area = std::find_if(area_list.begin(), area_list.end(), [&, id](const std::unique_ptr<PlayArea>& e) {return e->id == id; });
+		if (area == area_list.end())
+			return nullptr;
+		return (*area).get();
+	}
+
 	Tabletop();
 
-	std::vector<PlayArea> area_list;
+	std::vector<std::unique_ptr<PlayArea>> area_list;
 };
 
 class AssetManager {

@@ -20,6 +20,7 @@ public:
 		void Update(float time);
 		void HandlePacket(Serial::Packet& packet);
 		void UpdateEntity(Serial::Packet& packet);
+		void UpdateTable (Serial::Packet& packet);
 
 		ENetHost* client = nullptr;
 		ENetPeer* server = nullptr;
@@ -64,7 +65,7 @@ public:
 
 	void TableUpdate(sf::Event &e);
 
-	void Update();
+	void Update(float time);
 	void Draw(float time);
 
 	sf::Clock timer;
