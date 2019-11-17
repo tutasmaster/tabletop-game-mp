@@ -8,6 +8,7 @@
 #include "SFML/Graphics.hpp"
 #include "Serialization.hpp"
 #include "Messages.h"
+#include "Interpolation.h"
 
 class Client {
 public:
@@ -64,7 +65,7 @@ public:
 	void TableUpdate(sf::Event &e);
 
 	void Update();
-	void Draw();
+	void Draw(float time);
 
 	sf::Clock timer;
 

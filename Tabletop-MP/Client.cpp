@@ -152,7 +152,7 @@ void Client::TableUpdate(sf::Event &e) {
 
 void Client::Update() {
 	window.setView(current_view.view);
-	mouse_table_position = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+	mouse_table_position = window.mapPixelToCoords(sf::Mouse::getPosition(window)) - sf::Vector2f(0,10);
 	window.setView(sf::View(sf::FloatRect(0,0,1280, 720)));
 
 	sf::Event window_event;
@@ -211,10 +211,13 @@ void Client::Update() {
 	}
 }
 
-void Client::Draw() {
+void Client::Draw(float time) {
 	window.clear(sf::Color::White);
 	table_renderer.clear(sf::Color(25, 25, 25, 255));
 	for (auto& e : table.area_list[0].entity_list) {
+		e->display_x += Math::Lerp(e->display_x, e->x, Math::Clamp(time * 5, 0, 1));
+		e->display_y += Math::Lerp(e->display_y, e->y, Math::Clamp(time * 5, 0, 1));
+		e->display_rotation += Math::Lerp(e->display_rotation, e->rotation, Math::Clamp(time * 5,0,1));
 		asset_manager.asset_list[e->asset_id]->Draw(table_renderer, *e);
 	}
 	table_renderer.setView(current_view.view);
@@ -242,7 +245,7 @@ void Client::Run() {
 		if (socket.connected) 
 			socket.Update(time);
 		Update();
-		Draw();
+		Draw(time);
 		time = timer.restart().asSeconds();
 	}
 }

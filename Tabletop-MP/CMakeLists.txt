@@ -12,6 +12,7 @@ add_executable (Tabletop-CL "Client.cpp"
 							"Tabletop-MP.cpp" 
 							"Tabletop-MP.h"
 							"Messages.h"
+							"Interpolation.h"
 							"Serialization.hpp"
 							"enet.h")
 add_executable (Tabletop-SR "Server.cpp" 
@@ -19,6 +20,7 @@ add_executable (Tabletop-SR "Server.cpp"
 							"Tabletop-MP.cpp"
 							"Tabletop-MP.h"
 							"Serialization.hpp"
+							"Interpolation.h"
 							"Messages.h"
 							"enet.h")
 

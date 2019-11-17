@@ -17,6 +17,7 @@ public:
 		unsigned char id = 0;
 		float x = 0, y = 0;
 		float rotation = 0;
+		float display_x = 0, display_y = 0, display_rotation = 0;
 		bool is_movable = true;
 		unsigned int asset_id = 0;
 		virtual void Flip() {}
@@ -80,8 +81,8 @@ public:
 			drawable.setOrigin(sf::Vector2f(texture.getSize().x / 2, texture.getSize().y / 2));
 		}
 		void Draw(sf::RenderTarget& render_target, Tabletop::Entity& e) override {
-			drawable.setPosition(sf::Vector2f(e.x, e.y));
-			drawable.setRotation(e.rotation);
+			drawable.setPosition(sf::Vector2f(e.display_x, e.display_y));
+			drawable.setRotation(e.display_rotation);
 			render_target.draw(drawable);
 		}
 		bool CheckCollisionAtPoint(sf::Vector2f pos, Tabletop::Entity& e) override { 
