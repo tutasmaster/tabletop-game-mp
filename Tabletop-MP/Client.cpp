@@ -25,7 +25,14 @@ void Client::Socket::Connect(std::string ip = "127.0.0.1", unsigned short port =
 	enet_host_flush(client);
 }
 
-void Client::Socket::Update() {
+void Client::Socket::Update(float time) {
+	accumulator += time;
+	if (accumulator > update_rate && latest_packet != nullptr) {
+		enet_peer_send(server, 0, latest_packet);
+		enet_host_flush(client);
+		accumulator = 0;
+		latest_packet = nullptr;
+	}
 	ENetEvent network_event;
 	while (enet_host_service(client, &network_event, 0) > 0)
 	{
@@ -75,6 +82,14 @@ void Client::Socket::UpdateEntity(Serial::Packet& packet) {
 		e.asset_id = asset_id;
 	}
 		break;
+	case MESSAGE_ENTITY::POS:
+	case MESSAGE_ENTITY::POS_UNRELIABLE:
+	{
+		float x = 0, y = 0;
+		packet >> x >> y;
+		e.x = x; e.y = y;
+	}
+		break;
 	case MESSAGE_ENTITY::FLIP:
 		e.Flip();
 		break;
@@ -94,12 +109,25 @@ Client::Client() : socket(this), eman(this){
 
 void Client::TableUpdate(sf::Event &e) {
 	if (e.type == sf::Event::MouseButtonPressed) {
-		auto et = GetEntityAt(0, sf::Vector2f(e.mouseButton.x, e.mouseButton.y - 20));
-		if (et == nullptr) {
-			std::cout << "Nothing was found under the cursor\n";
-		}
-		else {
-			std::cout << "Found asset " << et->asset_id << " under the cursor.\n";
+		if(e.mouseButton.button == sf::Mouse::Button::Left){
+			if(current_entity == nullptr){
+				auto et = GetEntityAt(0, sf::Vector2f(e.mouseButton.x, e.mouseButton.y - 20));
+				if (et == nullptr) {
+					std::cout << "Nothing was found under the cursor\n";
+				}
+				else {
+					current_entity = et;
+				}
+			}
+			else {
+				eman.Move(*current_entity,
+					sf::Vector2f(
+						mouse_table_position.x,
+						mouse_table_position.y
+					)
+				);
+				current_entity = nullptr;
+			}
 		}
 	}
 	else if (e.type == sf::Event::KeyPressed) {
@@ -112,6 +140,13 @@ void Client::TableUpdate(sf::Event &e) {
 			eman.Rotate(*et, 10);
 		else if (e.key.code == sf::Keyboard::F)
 			eman.Flip(*et);
+	}
+	else if (e.type == sf::Event::MouseMoved) {
+		if (current_entity != nullptr) {
+			current_entity->x = mouse_table_position.x;
+			current_entity->y = mouse_table_position.y;
+			eman.MoveUnreliable(*current_entity, sf::Vector2f(mouse_table_position.x, mouse_table_position.y));
+		}
 	}
 }
 
@@ -202,11 +237,13 @@ void Client::Run() {
 	asset_manager.AddSprite("Assets/board.jpg");
 
 	socket.Connect();
+	float time = 0;
 	while(window.isOpen()){
 		if (socket.connected) 
-			socket.Update();
+			socket.Update(time);
 		Update();
 		Draw();
+		time = timer.restart().asSeconds();
 	}
 }
 
@@ -244,4 +281,25 @@ void Client::EntityManipulator::Rotate(Tabletop::Entity& e, float rotation)
 	ENetPacket* p = packet.GetENetPacket();
 	enet_peer_send(client->socket.server, 0, p);
 	enet_host_flush(client->socket.client);
+}
+
+void Client::EntityManipulator::Move(Tabletop::Entity& e, sf::Vector2f position)
+{
+	e.x = position.x;
+	e.y = position.y;
+	Serial::Packet packet;
+	packet << (unsigned char)MESSAGE_TYPE::UPDATE_ENTITY << (unsigned char)0 << e.id << (unsigned char)MESSAGE_ENTITY::POS << e.x << e.y;
+	ENetPacket* p = packet.GetENetPacket();
+	enet_peer_send(client->socket.server, 0, p);
+	enet_host_flush(client->socket.client);
+}
+
+void Client::EntityManipulator::MoveUnreliable(Tabletop::Entity& e, sf::Vector2f position)
+{
+	e.x = position.x;
+	e.y = position.y;
+	Serial::Packet packet;
+	packet << (unsigned char)MESSAGE_TYPE::UPDATE_ENTITY << (unsigned char)0 << e.id << (unsigned char)MESSAGE_ENTITY::POS << e.x << e.y;
+	ENetPacket* p = packet.GetENetPacket(ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
+	client->socket.latest_packet = p;
 }

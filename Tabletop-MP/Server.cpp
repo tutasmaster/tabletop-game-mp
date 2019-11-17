@@ -80,6 +80,25 @@ void Server::Socket::UpdateEntity(Serial::Packet& packet) {
 		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::ROTATE);
 	}
 		break;
+	case MESSAGE_ENTITY::POS:
+		std::cout << "AN ENTITY HAS BEEN MOVED!\n";
+	{
+		float x = 0, y = 0;
+		packet >> x >> y;
+		e.x = x;
+		e.y = y;
+		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::POS);
+	}
+		break;
+	case MESSAGE_ENTITY::POS_UNRELIABLE:
+	{
+		float x = 0, y = 0;
+		packet >> x >> y;
+		e.x = x;
+		e.y = y;
+		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::POS_UNRELIABLE);
+	}
+		break;
 	}
 }
 
@@ -94,8 +113,16 @@ void Server::Socket::BroadcastEntityStateUpdate(unsigned char table_id, unsigned
 	case MESSAGE_ENTITY::ROTATE:
 		p << owner->table.area_list[table_id].entity_list[entity_id]->rotation;
 		break;
+	case MESSAGE_ENTITY::POS:
+	case MESSAGE_ENTITY::POS_UNRELIABLE:
+		p << owner->table.area_list[table_id].entity_list[entity_id]->x << owner->table.area_list[table_id].entity_list[entity_id]->y;
+		break;
 	}
-	ENetPacket* packet = p.GetENetPacket();
+	ENetPacket* packet = p.GetENetPacket(
+		(MESSAGE_ENTITY)entity_function == MESSAGE_ENTITY::POS_UNRELIABLE ? 
+		ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT : 
+		ENET_PACKET_FLAG_RELIABLE
+	);
 	enet_host_broadcast(server, 0, packet);
 	enet_host_flush(server);
 }

@@ -56,6 +56,7 @@ namespace Serial {
 				d += data[cur];
 				cur++;
 			}
+			cur++;
 			return *this;
 		}
 	private:

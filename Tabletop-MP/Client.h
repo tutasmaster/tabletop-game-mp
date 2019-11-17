@@ -16,7 +16,7 @@ public:
 		Socket(Client * client) : owner(client) {}
 
 		void Connect(std::string ip, unsigned short port);
-		void Update();
+		void Update(float time);
 		void HandlePacket(Serial::Packet& packet);
 		void UpdateEntity(Serial::Packet& packet);
 
@@ -25,6 +25,10 @@ public:
 		Client* owner = nullptr;
 
 		ENetAddress address = { 0 };
+
+		float update_rate = 0.1;
+		float accumulator = 0;
+		ENetPacket * latest_packet = nullptr;
 
 		bool connected = false;
 	}socket;
@@ -44,6 +48,8 @@ public:
 		EntityManipulator(Client * c) : client(c) {}
 		void Flip(Tabletop::Entity& e);
 		void Rotate(Tabletop::Entity& e, float rotation);
+		void Move(Tabletop::Entity& e, sf::Vector2f position);
+		void MoveUnreliable(Tabletop::Entity& e, sf::Vector2f position);
 		Client* client;
 	}eman;
 
@@ -51,12 +57,16 @@ public:
 
 	Tabletop::Entity* GetEntityAt(unsigned char areaID, sf::Vector2f pos);
 
+	Tabletop::Entity* current_entity = nullptr;
+
 	void Run();
 
 	void TableUpdate(sf::Event &e);
 
 	void Update();
 	void Draw();
+
+	sf::Clock timer;
 
 	Client();
 };
