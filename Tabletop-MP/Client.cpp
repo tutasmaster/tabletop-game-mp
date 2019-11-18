@@ -280,7 +280,7 @@ void Client::Update(float time) {
 			WIDTH = window_event.size.width;
 			HEIGHT = window_event.size.height;	
 			current_view.view.setSize(sf::Vector2f(WIDTH, HEIGHT - 20));
-			current_view.view.setViewport(sf::FloatRect(0, 0, 1, 1));
+			current_view.view.setViewport(sf::FloatRect(0, ((HEIGHT-20)/HEIGHT), 1, 1));
 			current_view.view.setCenter(sf::Vector2f(WIDTH / 2, (HEIGHT - 20) / 2));
 			current_view.zoom = 1;
 			table_renderer.create(WIDTH, HEIGHT - 20);
@@ -338,7 +338,7 @@ void Client::Draw(float time) {
 void Client::Run() {
 	table_renderer.create(WIDTH, HEIGHT-20);
 	current_view.view.setSize(sf::Vector2f(WIDTH, HEIGHT-20));
-	current_view.view.setViewport(sf::FloatRect(0, 0, 1, 1));
+	current_view.view.setViewport(sf::FloatRect(0, ((HEIGHT - 20) / HEIGHT), 1, 1));
 	current_view.view.setCenter(sf::Vector2f(WIDTH/2, (HEIGHT-20)/2));
 	window.create(sf::VideoMode(WIDTH, HEIGHT), "Tabletop");
 	asset_manager.AddSprite("Assets/back.png");
