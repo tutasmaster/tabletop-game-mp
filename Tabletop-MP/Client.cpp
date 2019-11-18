@@ -247,7 +247,7 @@ void Client::TableUpdate(sf::Event &e) {
 void Client::Update(float time) {
 	window.setView(current_view.view);
 	mouse_table_position = window.mapPixelToCoords(sf::Mouse::getPosition(window)) - sf::Vector2f(0,10);
-	window.setView(sf::View(sf::FloatRect(0,0,1280, 720)));
+	window.setView(sf::View(sf::FloatRect(0,0, WIDTH, HEIGHT)));
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
 		float x = cos(((current_view.rotation + 180) / 180) * 3.14159265358979323846);
@@ -327,11 +327,11 @@ void Client::Draw(float time) {
 }
 
 void Client::Run() {
-	table_renderer.create(1280, 700);
-	current_view.view.setSize(sf::Vector2f(1280, 700));
+	table_renderer.create(WIDTH, HEIGHT-20);
+	current_view.view.setSize(sf::Vector2f(WIDTH, HEIGHT-20));
 	current_view.view.setViewport(sf::FloatRect(0, 0, 1, 1));
-	current_view.view.setCenter(sf::Vector2f(640, 350));
-	window.create(sf::VideoMode(1280, 720), "Tabletop", 5U);
+	current_view.view.setCenter(sf::Vector2f(WIDTH/2, (HEIGHT-20)/2));
+	window.create(sf::VideoMode(WIDTH, HEIGHT), "Tabletop", 5U);
 	asset_manager.AddSprite("Assets/back.png");
 	asset_manager.AddSprite("Assets/2_of_clubs_th.jpg");
 	asset_manager.AddSprite("Assets/board.jpg");
