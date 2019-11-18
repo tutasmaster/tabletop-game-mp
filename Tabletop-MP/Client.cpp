@@ -276,6 +276,15 @@ void Client::Update(float time) {
 		if (window_event.type == sf::Event::Closed) {
 			window.close();
 		}
+		else if (window_event.type == sf::Event::Resized) {
+			WIDTH = window_event.size.width;
+			HEIGHT = window_event.size.height;	
+			current_view.view.setSize(sf::Vector2f(WIDTH, HEIGHT - 20));
+			current_view.view.setViewport(sf::FloatRect(0, 0, 1, 1));
+			current_view.view.setCenter(sf::Vector2f(WIDTH / 2, (HEIGHT - 20) / 2));
+			current_view.zoom = 1;
+			table_renderer.create(WIDTH, HEIGHT - 20);
+		}
 		else if (window_event.type == sf::Event::MouseWheelScrolled) {
 			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
 				current_view.view.rotate(-window_event.mouseWheelScroll.delta * 3.6);
@@ -331,7 +340,7 @@ void Client::Run() {
 	current_view.view.setSize(sf::Vector2f(WIDTH, HEIGHT-20));
 	current_view.view.setViewport(sf::FloatRect(0, 0, 1, 1));
 	current_view.view.setCenter(sf::Vector2f(WIDTH/2, (HEIGHT-20)/2));
-	window.create(sf::VideoMode(WIDTH, HEIGHT), "Tabletop", 5U);
+	window.create(sf::VideoMode(WIDTH, HEIGHT), "Tabletop");
 	asset_manager.AddSprite("Assets/back.png");
 	asset_manager.AddSprite("Assets/2_of_clubs_th.jpg");
 	asset_manager.AddSprite("Assets/board.jpg");

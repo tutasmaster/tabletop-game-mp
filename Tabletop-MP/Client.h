@@ -70,7 +70,7 @@ public:
 
 	sf::Clock timer;
 
-	const unsigned int WIDTH = 400, HEIGHT = 200;
+	unsigned int WIDTH = 400, HEIGHT = 200;
 
 	Client();
 };
