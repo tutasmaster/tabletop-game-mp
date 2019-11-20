@@ -81,7 +81,8 @@ public:
 			auto it = FindEntity(id);
 			if (it != nullptr) {
 				deck.cards.push_back(id);
-				deck.asset_id = (it)->asset_id;
+				if(deck.cards.size() == 1)
+					deck.asset_id = (it)->asset_id;
 				(it)->x = deck.x;
 				(it)->y = deck.y;
 				(it)->asset_id = 0;
@@ -96,6 +97,8 @@ public:
 				(it)->y = deck.y - 10;
 				(it)->display_x = deck.x;
 				(it)->display_y = deck.y;
+				(it)->rotation = deck.rotation;
+				(it)->display_rotation = deck.display_rotation - 180;
 				((Card*)(it))->asset_id = ((Card*)(it))->is_flipped ? ((Card*)(it))->front_id : ((Card*)(it))->back_id;
 				deck.cards.pop_back();
 			}
@@ -103,7 +106,7 @@ public:
 				deck.asset_id = deck.empty_id;
 			}
 			else {
-				Card* c = ((Card*)FindEntity(deck.cards.back()));
+				Card* c = ((Card*)FindEntity(deck.cards.front()));
 				deck.asset_id = c->is_flipped ? c->front_id : c->back_id;
 			}
 		}
