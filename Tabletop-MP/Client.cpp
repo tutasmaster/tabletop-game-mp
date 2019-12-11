@@ -223,6 +223,16 @@ void Client::TableUpdate(sf::Event &e) {
 				current_entity = nullptr;
 			}
 		}
+		else if (e.mouseButton.button == sf::Mouse::Button::Right) {
+			auto et = GetEntityAt(0, mouse_table_position);
+			if (et == nullptr) {
+				std::cout << "Nothing was found under the cursor\n";
+			}
+			else {
+				current_entity = et;
+				widgets.OpenEntity(mouse_table_position,et->area_id,et->id);
+			}
+		}
 	}
 	else if (e.type == sf::Event::KeyPressed) {
 		auto et = GetEntityAt(0, sf::Vector2f(mouse_table_position.x, mouse_table_position.y));
@@ -248,6 +258,7 @@ void Client::Update(float time) {
 	window.setView(current_view.view);
 	mouse_table_position = window.mapPixelToCoords(sf::Mouse::getPosition(window)) - sf::Vector2f(0,10);
 	window.setView(sf::View(sf::FloatRect(0,0, WIDTH, HEIGHT)));
+	widgets.gui.setView(sf::View(sf::FloatRect(0, 0, WIDTH, HEIGHT)));
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
 		float x = cos(((current_view.rotation + 180) / 180) * 3.14159265358979323846);
@@ -312,7 +323,7 @@ void Client::Update(float time) {
 				}
 			}
 		}
-		gui.handleEvent(window_event);
+		widgets.gui.handleEvent(window_event);
 	}
 }
 
@@ -333,13 +344,13 @@ void Client::Draw(float time) {
 	sf::Sprite table_sprite(table_texture);
 	table_sprite.setPosition(sf::Vector2f(0, 20));
 	window.draw(table_sprite);
-	gui.draw();
+	widgets.gui.draw();
 	window.display();
 }
 
 void Client::Run() {
-	gui.setTarget(window);
 	table_renderer.create(WIDTH, HEIGHT-20);
+	widgets.gui.setTarget(window);
 	current_view.view.setSize(sf::Vector2f(WIDTH, HEIGHT-20));
 	current_view.view.setViewport(sf::FloatRect(0, ((HEIGHT - 20) / HEIGHT), 1, 1));
 	current_view.view.setCenter(sf::Vector2f(WIDTH/2, (HEIGHT-20)/2));

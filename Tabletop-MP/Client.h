@@ -72,7 +72,27 @@ public:
 	sf::Clock timer;
 
 	unsigned int WIDTH = 400, HEIGHT = 200;
-	tgui::Gui gui;
+
+	struct Widgets {
+		tgui::Gui gui;
+		tgui::Panel::Ptr panel;
+		tgui::Button::Ptr flip_button;
+		Widgets() {
+			flip_button = tgui::Button::create("FLIP");
+			panel = tgui::Panel::create();
+			panel->add(flip_button);
+			panel->setSize(flip_button->getSize());
+			panel->setEnabled(false);
+			panel->setVisible(false);
+			gui.add(panel, "CARD");
+		}
+
+		void OpenEntity(sf::Vector2f pos, unsigned char area, unsigned char id) {
+			panel->setPosition(pos.x, pos.y);
+			panel->setVisible(true);
+			panel->setEnabled(true);
+		}
+	}widgets;
 
 	Client();
 };
