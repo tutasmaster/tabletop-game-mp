@@ -229,7 +229,7 @@ void Client::TableUpdate(sf::Event &e) {
 				std::cout << "Nothing was found under the cursor\n";
 			}
 			else {
-				current_entity = et;
+				//current_entity = et;
 				widgets.OpenEntity(mouse_table_position,et->area_id,et->id);
 			}
 		}
@@ -284,6 +284,8 @@ void Client::Update(float time) {
 
 	sf::Event window_event;
 	while (window.pollEvent(window_event)) {
+		if (widgets.gui.handleEvent(window_event))
+			continue;
 		if (window_event.type == sf::Event::Closed) {
 			window.close();
 		}
@@ -323,7 +325,6 @@ void Client::Update(float time) {
 				}
 			}
 		}
-		widgets.gui.handleEvent(window_event);
 	}
 }
 
@@ -349,6 +350,7 @@ void Client::Draw(float time) {
 }
 
 void Client::Run() {
+	widgets.client = this;
 	table_renderer.create(WIDTH, HEIGHT-20);
 	widgets.gui.setTarget(window);
 	current_view.view.setSize(sf::Vector2f(WIDTH, HEIGHT-20));
@@ -401,6 +403,16 @@ void Client::EntityManipulator::Flip(Tabletop::Entity& e)
 void Client::EntityManipulator::Rotate(Tabletop::Entity& e, float rotation)
 {
 	e.rotation += rotation;
+	Serial::Packet packet;
+	packet << (unsigned char)MESSAGE_TYPE::UPDATE_ENTITY << (unsigned char)0 << e.id << (unsigned char)MESSAGE_ENTITY::ROTATE << e.rotation;
+	ENetPacket* p = packet.GetENetPacket();
+	enet_peer_send(client->socket.server, 0, p);
+	enet_host_flush(client->socket.client);
+}
+
+void Client::EntityManipulator::SetRotation(Tabletop::Entity& e, float rotation)
+{
+	e.rotation = rotation;
 	Serial::Packet packet;
 	packet << (unsigned char)MESSAGE_TYPE::UPDATE_ENTITY << (unsigned char)0 << e.id << (unsigned char)MESSAGE_ENTITY::ROTATE << e.rotation;
 	ENetPacket* p = packet.GetENetPacket();

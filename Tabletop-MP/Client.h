@@ -51,6 +51,7 @@ public:
 		EntityManipulator(Client * c) : client(c) {}
 		void Flip(Tabletop::Entity& e);
 		void Rotate(Tabletop::Entity& e, float rotation);
+		void SetRotation(Tabletop::Entity& e, float rotation);
 		void Move(Tabletop::Entity& e, sf::Vector2f position);
 		void MoveUnreliable(Tabletop::Entity& e, sf::Vector2f position);
 		Client* client;
@@ -77,21 +78,44 @@ public:
 		tgui::Gui gui;
 		tgui::Panel::Ptr panel;
 		tgui::Button::Ptr flip_button;
+		tgui::Button::Ptr reset_rotation_button;
 		Widgets() {
 			flip_button = tgui::Button::create("FLIP");
+			reset_rotation_button = tgui::Button::create("RESET ROTATION");
 			panel = tgui::Panel::create();
 			panel->add(flip_button);
-			panel->setSize(flip_button->getSize());
+			panel->add(reset_rotation_button);
+			reset_rotation_button->setPosition(0, flip_button->getSize().y);
+			panel->setSize(reset_rotation_button->getSize().x, reset_rotation_button->getSize().y*2);
 			panel->setEnabled(false);
 			panel->setVisible(false);
 			gui.add(panel, "CARD");
+			panel->getRenderer()->setBackgroundColor(sf::Color(0, 0, 0, 0));
+		}
+
+		void FlipEntity(unsigned char area, unsigned char id) {
+			client->eman.Flip(*client->table.area_list[area]->FindEntity(id));
+			panel->setEnabled(false);
+			panel->setVisible(false);
+		}
+
+		void ResetRotation(unsigned char area, unsigned char id) {
+			client->eman.SetRotation(*client->table.area_list[area]->FindEntity(id),0);
+			panel->setEnabled(false);
+			panel->setVisible(false);
 		}
 
 		void OpenEntity(sf::Vector2f pos, unsigned char area, unsigned char id) {
 			panel->setPosition(pos.x, pos.y);
 			panel->setVisible(true);
 			panel->setEnabled(true);
+			flip_button->disconnectAll();
+			flip_button->connect("pressed",&Client::Widgets::FlipEntity,this,area,id);
+			reset_rotation_button->disconnectAll();
+			reset_rotation_button->connect("pressed", &Client::Widgets::ResetRotation, this, area, id);
 		}
+
+		Client* client;
 	}widgets;
 
 	Client();
