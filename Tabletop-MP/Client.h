@@ -6,6 +6,7 @@
 #define ENET_IMPLEMENTATION
 #include "enet.h"
 #include "SFML/Graphics.hpp"
+#include "TGUI/TGUI.hpp"
 #include "Serialization.hpp"
 #include "Messages.h"
 #include "Interpolation.h"
@@ -71,6 +72,7 @@ public:
 	sf::Clock timer;
 
 	unsigned int WIDTH = 400, HEIGHT = 200;
+	tgui::Gui gui;
 
 	Client();
 };

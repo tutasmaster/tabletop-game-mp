@@ -13,7 +13,12 @@
       "variables": [
         {
           "name": "SFML_DIR",
-          "value": "D:/399/CODE/Libraries C++/SFML-2.5.1-64bit",
+          "value": "C:/CODE/SFML-2.5.1",
+          "type": "PATH"
+        },
+        {
+          "name": "TGUI_DIR",
+          "value": "C:\\CODE\\TGUI-0.8\\",
           "type": "PATH"
         }
       ]

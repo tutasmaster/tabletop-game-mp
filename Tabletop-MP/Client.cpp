@@ -312,6 +312,7 @@ void Client::Update(float time) {
 				}
 			}
 		}
+		gui.handleEvent(window_event);
 	}
 }
 
@@ -332,10 +333,12 @@ void Client::Draw(float time) {
 	sf::Sprite table_sprite(table_texture);
 	table_sprite.setPosition(sf::Vector2f(0, 20));
 	window.draw(table_sprite);
+	gui.draw();
 	window.display();
 }
 
 void Client::Run() {
+	gui.setTarget(window);
 	table_renderer.create(WIDTH, HEIGHT-20);
 	current_view.view.setSize(sf::Vector2f(WIDTH, HEIGHT-20));
 	current_view.view.setViewport(sf::FloatRect(0, ((HEIGHT - 20) / HEIGHT), 1, 1));
