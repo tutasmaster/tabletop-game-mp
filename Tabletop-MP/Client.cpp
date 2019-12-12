@@ -142,6 +142,12 @@ void Client::Socket::UpdateEntity(Serial::Packet& packet) {
 		//packet >> entity.x >> entity.y >> entity.rotation >> entity.asset_id >> entity.type
 	}
 	break;
+	case MESSAGE_ENTITY::REMOVE:
+	{
+		std::cout << "REMOVED AN ENTITY!\n";
+		owner->table.area_list[e->area_id]->Remove(e->id);
+	}
+	break;
 	case MESSAGE_ENTITY::ASSET_ID:
 	{
 		unsigned char asset_id = 0;
@@ -439,4 +445,13 @@ void Client::EntityManipulator::MoveUnreliable(Tabletop::Entity& e, sf::Vector2f
 	packet << (unsigned char)MESSAGE_TYPE::UPDATE_ENTITY << (unsigned char)0 << e.id << (unsigned char)MESSAGE_ENTITY::POS << e.x << e.y;
 	ENetPacket* p = packet.GetENetPacket(ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
 	client->socket.latest_packet = p;
+}
+
+void Client::EntityManipulator::Remove(Tabletop::Entity& e)
+{
+	Serial::Packet packet;
+	packet << (unsigned char)MESSAGE_TYPE::UPDATE_ENTITY << (unsigned char)0 << e.id << (unsigned char)MESSAGE_ENTITY::REMOVE;
+	ENetPacket* p = packet.GetENetPacket();
+	enet_peer_send(client->socket.server, 0, p);
+	enet_host_flush(client->socket.client);
 }

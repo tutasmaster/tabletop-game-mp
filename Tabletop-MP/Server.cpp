@@ -104,6 +104,13 @@ void Server::Socket::UpdateEntity(Serial::Packet& packet) {
 		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::POS_UNRELIABLE);
 	}
 		break;
+	case MESSAGE_ENTITY::REMOVE:
+	{
+		std::cout << "AN ENTITY HAS BEEN REMOVED!\n";
+		BroadcastEntityStateUpdate(table_id, entity_id, (unsigned char)MESSAGE_ENTITY::REMOVE);
+		owner->table.area_list[e->area_id]->Remove(e->id);
+		break;
+	}
 	}
 }
 

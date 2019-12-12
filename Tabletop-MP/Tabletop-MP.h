@@ -76,6 +76,15 @@ public:
 				PopFromDeck((Deck&)entity);
 		}
 
+		void Remove(unsigned char id) {
+			int i = 0;
+			for (i = 0; i < entity_list.size(); i++) {
+				if (entity_list[i]->id == id)
+					break;
+			}
+			entity_list.erase(entity_list.begin() + i);
+		}
+
 		void InsertIntoDeck(Deck&deck, unsigned char id) {
 			auto& list = entity_list;
 			auto it = FindEntity(id);
