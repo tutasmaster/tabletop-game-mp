@@ -145,6 +145,8 @@ void Client::Socket::UpdateEntity(Serial::Packet& packet) {
 	case MESSAGE_ENTITY::REMOVE:
 	{
 		std::cout << "REMOVED AN ENTITY!\n";
+		if (owner->current_entity->id == e->id)
+			owner->current_entity = nullptr;
 		owner->table.area_list[e->area_id]->Remove(e->id);
 	}
 	break;
@@ -363,6 +365,7 @@ void Client::Run() {
 	current_view.view.setViewport(sf::FloatRect(0, ((HEIGHT - 20) / HEIGHT), 1, 1));
 	current_view.view.setCenter(sf::Vector2f(WIDTH/2, (HEIGHT-20)/2));
 	window.create(sf::VideoMode(WIDTH, HEIGHT), "Tabletop");
+	window.setFramerateLimit(FPS_CAP);
 	asset_manager.AddSprite("Assets/back.png");
 	asset_manager.AddSprite("Assets/2_of_clubs_th.jpg");
 	asset_manager.AddSprite("Assets/board.jpg");

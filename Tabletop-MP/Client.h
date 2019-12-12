@@ -73,7 +73,7 @@ public:
 
 	sf::Clock timer;
 
-	unsigned int WIDTH = 400, HEIGHT = 200;
+	unsigned int WIDTH = 400, HEIGHT = 200, FPS_CAP = 60;
 
 	struct Widgets {
 		tgui::Gui gui;

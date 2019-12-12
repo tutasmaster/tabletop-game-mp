@@ -77,12 +77,21 @@ public:
 		}
 
 		void Remove(unsigned char id) {
+			
 			int i = 0;
 			for (i = 0; i < entity_list.size(); i++) {
 				if (entity_list[i]->id == id)
 					break;
 			}
+
+			if (entity_list[i]->type == Entity::deck) {
+				while(((Deck *)(entity_list[i].get()))->cards.size() > 0){
+					PopFromDeck(*((Deck *)(entity_list[i]).get()));
+				}
+			}
 			entity_list.erase(entity_list.begin() + i);
+
+
 		}
 
 		void InsertIntoDeck(Deck&deck, unsigned char id) {
